@@ -20,7 +20,7 @@ std::vector<byte> file::read(size_t bytes_to_read)
 		byte b;
 		auto bytes_read = fread(&b, sizeof(byte), 1, m_ptr);
 
-		if (bytes_read != 1)
+		if (1 != bytes_read)
 		{
 			break;
 		}
