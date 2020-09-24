@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <vector>
 #include <array>
+#include <stdint.h>
 
 using byte = unsigned char;
 
@@ -38,6 +39,12 @@ public:
 	std::vector<byte> read(size_t bytes_to_read);
 
 	byte read_byte();
+
+	uint16_t read_uint16();
+
+	uint32_t read_uint32();
+
+	int32_t read_int32();
 
 	void seek(long offset, int origin);
 

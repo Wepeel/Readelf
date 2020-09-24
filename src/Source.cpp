@@ -13,7 +13,5 @@ int main()
 	printf("%u\n", file.get_ei_osabi());
 	printf("%u\n", file.get_ei_abiversion());
 
-	//system("ls -al");
-
 	return 0;
 }

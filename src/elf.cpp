@@ -37,6 +37,30 @@ byte elf::get_ei_abiversion()
 	return m_file.read_byte();
 }
 
+elf::half elf::get_elf_type()
+{
+	m_file.seek(15, SEEK_SET);
+	return m_file.read_uint16();
+}
+
+elf::half elf::get_elf_machine()
+{
+	m_file.seek(31, SEEK_SET);
+	return m_file.read_uint16();
+}
+
+elf::word elf::get_elf_version()
+{
+	m_file.seek(47, SEEK_SET);
+	return m_file.read_int32();
+}
+
+elf::addr elf::get_elf_entry()
+{
+	m_file.seek(79, SEEK_SET);
+	return m_file.read_uint32();
+}
+
 bool elf::verify_magic_numbers()
 {
 	std::array<byte, 4> arr = m_file.read<4>();
