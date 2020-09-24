@@ -2,8 +2,8 @@ workspace "Readelf"
 	architecture "x86_64"
 	configurations
 	{
-		"Debug",
-		"Release"
+		"Release",
+		"Debug"
 	}
 
 	system "linux"
