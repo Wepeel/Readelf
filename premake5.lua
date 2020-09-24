@@ -6,6 +6,9 @@ workspace "Readelf"
 		"Release"
 	}
 
+	system "linux"
+	
+
 project "Readelf"
 	kind "ConsoleApp"
 	language "C++"
