@@ -10,15 +10,24 @@ file::~file()
 	fclose(m_ptr);
 }
 
+void file::reset()
+{
+	rewind(m_ptr);
+}
+
+byte file::read_byte()
+{
+	return fgetc(m_ptr);
+}
+
 std::vector<byte> file::read(size_t bytes_to_read)
 {
 	std::vector<byte> ret;
-	ret.reserve(bytes_to_read);
 
 	for (size_t i = 0; i < bytes_to_read; ++i)
 	{
 		byte b;
-		auto bytes_read = fread(&b, sizeof(byte), 1, m_ptr);
+		size_t bytes_read = fread(&b, sizeof(byte), 1, m_ptr);
 
 		if (1 != bytes_read)
 		{
@@ -29,4 +38,9 @@ std::vector<byte> file::read(size_t bytes_to_read)
 	}
 
 	return ret;
+}
+
+void file::seek(long offset, int origin)
+{
+	fseek(m_ptr, offset, origin);
 }

@@ -12,6 +12,16 @@ public:
 
 	elf(const char* path);
 
+	byte get_ei_class();
+
+	byte get_ei_data();
+
+	byte get_ei_version();
+
+	byte get_ei_osabi();
+
+	byte get_ei_abiversion();
+
 
 private:
 

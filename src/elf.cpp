@@ -7,26 +7,56 @@ elf::elf(const char* path)
 	assert(verify_magic_numbers());
 }
 
+byte elf::get_ei_class()
+{
+	m_file.seek(4, SEEK_SET);
+	return m_file.read_byte();
+}
+
+byte elf::get_ei_data()
+{
+	m_file.seek(5, SEEK_SET);
+	return m_file.read_byte();
+}
+
+byte elf::get_ei_version()
+{
+	m_file.seek(6, SEEK_SET);
+	return m_file.read_byte();
+}
+
+byte elf::get_ei_osabi()
+{
+	m_file.seek(7, SEEK_SET);
+	return m_file.read_byte();
+}
+
+byte elf::get_ei_abiversion()
+{
+	m_file.seek(8, SEEK_SET);
+	return m_file.read_byte();
+}
+
 bool elf::verify_magic_numbers()
 {
-	auto vec = m_file.read(4);
+	std::array<byte, 4> arr = m_file.read<4>();
 
-	if (0x7f != vec[0])
+	if (0x7f != arr[0])
 	{
 		return false;
 	}
 
-	if ('E' != vec[1])
+	if ('E' != arr[1])
 	{
 		return false;
 	}
 
-	if ('L' != vec[2])
+	if ('L' != arr[2])
 	{
 		return false;
 	}
 
-	if ('F' != vec[3])
+	if ('F' != arr[3])
 	{
 		return false;
 	}
