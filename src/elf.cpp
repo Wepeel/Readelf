@@ -7,6 +7,12 @@ elf::elf(const char* path)
 	assert(verify_magic_numbers());
 }
 
+std::array<byte, 16> elf::get_magic()
+{
+	m_file.reset();
+	return m_file.read<16>();
+}
+
 byte elf::get_ei_class()
 {
 	m_file.seek(4, SEEK_SET);
@@ -86,4 +92,14 @@ bool elf::verify_magic_numbers()
 	}
 
 	return true;
+}
+
+void elf::print_magic(std::array<byte, 16> arr)
+{
+	for (size_t i = 0; i < 15; i++)
+	{
+		printf("%02x ", arr[i]);
+	}
+
+	printf("%02x\n", arr[15]);
 }

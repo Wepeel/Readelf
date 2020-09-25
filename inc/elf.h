@@ -19,6 +19,8 @@ public:
 
 	elf(const char* path);
 
+	std::array<byte, 16> get_magic();
+
 	byte get_ei_class();
 
 	byte get_ei_data();
@@ -36,6 +38,8 @@ public:
 	word get_elf_version();
 
 	addr get_elf_entry();
+
+	static void print_magic(std::array<byte, 16> arr);
 
 
 private:
