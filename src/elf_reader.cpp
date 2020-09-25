@@ -1,17 +1,17 @@
-#include "elf.h"
+#include "elf_reader.h"
 #include <assert.h>
 
-bool elf::is_little_endian()
+bool elf_reader::is_little_endian()
 {
 	return get_ei_data() == 1;
 }
 
-elf::half elf::get_little_endian(elf::half half)
+elf_reader::half elf_reader::get_little_endian(elf_reader::half half)
 {
 	return (half >> 8) | (half << 8);
 }
 
-elf::word elf::get_little_endian(elf::word word)
+elf_reader::word elf_reader::get_little_endian(elf_reader::word word)
 {
 	return ((word >> 24) & 0xff) |
 		((word << 8) & 0xff0000) |
@@ -19,7 +19,7 @@ elf::word elf::get_little_endian(elf::word word)
 		((word << 24) & 0xff000000);
 }
 
-elf::half elf::get_proper_endian(elf::half half)
+elf_reader::half elf_reader::get_proper_endian(elf_reader::half half)
 {
 	if (is_little_endian())
 	{
@@ -29,7 +29,7 @@ elf::half elf::get_proper_endian(elf::half half)
 	return half;
 }
 
-elf::word elf::get_proper_endian(elf::word word)
+elf_reader::word elf_reader::get_proper_endian(elf_reader::word word)
 {
 	if (is_little_endian())
 	{
@@ -39,73 +39,80 @@ elf::word elf::get_proper_endian(elf::word word)
 	return word;
 }
 
-elf::elf(const char* path)
+elf_reader::elf_reader(const char* path)
 	:m_file(path, "r")
 {
 	assert(verify_magic_numbers());
 }
 
-std::array<byte, 16> elf::get_magic()
+std::array<byte, 16> elf_reader::get_magic()
 {
 	m_file.reset();
 	return m_file.read<16>();
 }
 
-byte elf::get_ei_class()
+byte elf_reader::get_ei_class()
 {
 	m_file.seek(4, SEEK_SET);
 	return m_file.read_byte();
 }
 
-byte elf::get_ei_data()
+byte elf_reader::get_ei_data()
 {
 	m_file.seek(5, SEEK_SET);
 	return m_file.read_byte();
 }
 
-byte elf::get_ei_version()
+byte elf_reader::get_ei_version()
 {
 	m_file.seek(6, SEEK_SET);
 	return m_file.read_byte();
 }
 
-byte elf::get_ei_osabi()
+byte elf_reader::get_ei_osabi()
 {
 	m_file.seek(7, SEEK_SET);
 	return m_file.read_byte();
 }
 
-byte elf::get_ei_abiversion()
+byte elf_reader::get_ei_abiversion()
 {
 	m_file.seek(8, SEEK_SET);
 	return m_file.read_byte();
 }
 
-elf::half elf::get_elf_type()
+elf_reader::half elf_reader::get_elf_type()
 {
 	m_file.seek(15, SEEK_SET);
 	return m_file.read_uint16();
 }
 
-elf::half elf::get_elf_machine()
+elf_reader::half elf_reader::get_elf_machine()
 {
 	m_file.seek(31, SEEK_SET);
 	return m_file.read_uint16();
 }
 
-elf::word elf::get_elf_version()
+elf_reader::word elf_reader::get_elf_version()
 {
 	m_file.seek(20, SEEK_SET);
 	return m_file.read_int32();
 }
 
-elf::addr elf::get_elf_entry()
+elf_reader::addr elf_reader::get_elf_entry()
 {
 	m_file.seek(79, SEEK_SET);
 	return m_file.read_uint32();
 }
 
-bool elf::verify_magic_numbers()
+elf_reader::off elf_reader::get_elf_shoff()
+{
+	m_file.seek(40, SEEK_SET);
+	return m_file.read_uint32();
+}
+
+
+bool elf_reader::verify_magic_numbers()
 {
 	std::array<byte, 4> arr = m_file.read<4>();
 
@@ -132,7 +139,7 @@ bool elf::verify_magic_numbers()
 	return true;
 }
 
-void elf::print_magic(std::array<byte, 16> arr)
+void elf_reader::print_magic(std::array<byte, 16> arr)
 {
 	for (size_t i = 0; i < 15; i++)
 	{
@@ -142,7 +149,7 @@ void elf::print_magic(std::array<byte, 16> arr)
 	printf("%02x\n", arr[15]);
 }
 
-const char* elf::ei_class_text(byte ei_class)
+const char* elf_reader::ei_class_text(byte ei_class)
 {
 	switch (ei_class)
 	{
@@ -157,7 +164,7 @@ const char* elf::ei_class_text(byte ei_class)
 	}
 }
 
-const char* elf::ei_data_text(byte ei_data)
+const char* elf_reader::ei_data_text(byte ei_data)
 {
 	switch (ei_data)
 	{
@@ -172,7 +179,7 @@ const char* elf::ei_data_text(byte ei_data)
 	}
 }
 
-const char* elf::ei_version_text(byte ei_version)
+const char* elf_reader::ei_version_text(byte ei_version)
 {
 	switch (ei_version)
 	{
@@ -185,7 +192,7 @@ const char* elf::ei_version_text(byte ei_version)
 	}
 }
 
-const char* elf::ei_osabi_text(byte ei_osabi)
+const char* elf_reader::ei_osabi_text(byte ei_osabi)
 {
 	switch (ei_osabi)
 	{
@@ -215,7 +222,7 @@ const char* elf::ei_osabi_text(byte ei_osabi)
 	}
 }
 
-const char* elf::ei_abitversion_text(byte ei_abiversion)
+const char* elf_reader::ei_abitversion_text(byte ei_abiversion)
 {
 	switch (ei_abiversion)
 	{
@@ -226,7 +233,7 @@ const char* elf::ei_abitversion_text(byte ei_abiversion)
 	}
 }
 
-const char* elf::elf_type_text(elf::half elf_type)
+const char* elf_reader::elf_type_text(elf_reader::half elf_type)
 {
 
 	elf_type = get_proper_endian(elf_type);
@@ -252,7 +259,7 @@ const char* elf::elf_type_text(elf::half elf_type)
 	}
 }
 
-const char* elf::elf_machine_text(elf::half elf_machine)
+const char* elf_reader::elf_machine_text(elf_reader::half elf_machine)
 {
 	elf_machine = get_proper_endian(elf_machine);
 
@@ -264,7 +271,7 @@ const char* elf::elf_machine_text(elf::half elf_machine)
 	return "INVALID";
 }
 
-const char* elf::elf_version_text(elf::word elf_version)
+const char* elf_reader::elf_version_text(elf_reader::word elf_version)
 {
 	if (elf_version == 1)
 	{
