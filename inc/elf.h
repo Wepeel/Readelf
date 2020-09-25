@@ -41,6 +41,32 @@ public:
 
 	static void print_magic(std::array<byte, 16> arr);
 
+	static const char* ei_class_text(byte ei_class);
+
+	static const char* ei_data_text(byte ei_data);
+
+	static const char* ei_version_text(byte ei_version);
+
+	static const char* ei_osabi_text(byte ei_osabi);
+
+	static const char* ei_abitversion_text(byte ei_abiversion);
+
+	const char* elf_type_text(half elf_type);
+
+	const char* elf_machine_text(half elf_machine);
+
+	const char* elf_version_text(word elf_version);
+
+	half get_proper_endian(half);
+
+	word get_proper_endian(word);
+
+	bool is_little_endian();
+
+	static half get_little_endian(half);
+
+	static word get_little_endian(word);
+
 
 private:
 
