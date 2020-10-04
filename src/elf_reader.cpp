@@ -1,44 +1,6 @@
 #include "elf_reader.h"
 #include <assert.h>
 
-bool elf_reader::is_little_endian()
-{
-	return get_ei_data() == 1;
-}
-
-elf_reader::half elf_reader::get_little_endian(elf_reader::half half)
-{
-	return (half >> 8) | (half << 8);
-}
-
-elf_reader::word elf_reader::get_little_endian(elf_reader::word word)
-{
-	return ((word >> 24) & 0xff) |
-		((word << 8) & 0xff0000) |
-		((word >> 8) & 0xff00) |
-		((word << 24) & 0xff000000);
-}
-
-elf_reader::half elf_reader::get_proper_endian(elf_reader::half half)
-{
-	if (is_little_endian())
-	{
-		return get_little_endian(half);
-	}
-
-	return half;
-}
-
-elf_reader::word elf_reader::get_proper_endian(elf_reader::word word)
-{
-	if (is_little_endian())
-	{
-		return get_little_endian(word);
-	}
-
-	return word;
-}
-
 elf_reader::elf_reader(const char* path)
 	:m_file(path, "r")
 {

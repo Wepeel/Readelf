@@ -21,8 +21,8 @@ project "Readelf"
 
 	files
     {
-        "inc/*.h",
-        "src/*.cpp"
+        "inc/**.h",
+        "src/**.cpp"
     }
 
 	includedirs

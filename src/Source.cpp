@@ -1,4 +1,4 @@
-#include "elf.h"
+#include "elf_reader.h"
 
 #define HEX_STRING " %-30s %u\n"
 #define PRINT_STRING " %-30s %s\n"

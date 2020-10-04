@@ -19,6 +19,8 @@ public:
 
 	elf_reader(const char* path);
 
+
+
 	std::array<byte, 16> get_magic();
 
 	byte get_ei_class();
