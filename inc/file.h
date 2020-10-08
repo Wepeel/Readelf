@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <vector>
+#include <string>
 #include <array>
 #include <stdint.h>
 
@@ -38,13 +39,23 @@ public:
 
 	std::vector<byte> read(size_t bytes_to_read);
 
-	byte read_byte();
+	template<typename T>
+	T read()
+	{
+		T obj;
+		size_t bytes_read = fread(&obj, 1, sizeof(T), m_ptr);
 
-	uint16_t read_uint16();
+		if (bytes_read != sizeof(T))
+		{
+			printf("ERROR\n");
+			printf("Bytes to have read: %zu\n", sizeof(T));
+			printf("Bytes read: %zu\n", bytes_read);
+		}
 
-	uint32_t read_uint32();
+		return obj;
+	}
 
-	int32_t read_int32();
+	std::string read_string();
 
 	void seek(long offset, int origin);
 

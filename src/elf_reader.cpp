@@ -1,114 +1,182 @@
 #include "elf_reader.h"
 #include <assert.h>
 
+
+template<size_t T>
+bool equal_byte_array(std::array<byte, T> arr1, std::array<byte, T> arr2)
+{
+	for (size_t i = 0; i < T; ++i)
+	{
+		if (arr1[i] != arr2[i])
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 elf_reader::elf_reader(const char* path)
 	:m_file(path, "r")
 {
 	assert(verify_magic_numbers());
 }
 
-std::array<byte, 16> elf_reader::get_magic()
+Elf64_Ehdr elf_reader::get_elf_header()
 {
 	m_file.reset();
-	return m_file.read<16>();
+	return m_file.read<Elf64_Ehdr>();
 }
 
-byte elf_reader::get_ei_class()
+std::array<byte, 16> elf_reader::get_magic()
 {
-	m_file.seek(4, SEEK_SET);
-	return m_file.read_byte();
+	Elf64_Ehdr hdr = get_elf_header();
+
+	std::array<byte, 16> ret;
+
+	std::copy(std::begin(hdr.e_ident), std::end(hdr.e_ident), std::begin(ret));
+
+	return ret;
 }
 
-byte elf_reader::get_ei_data()
+Elf64_Shdr elf_reader::get_symbol_table()
 {
-	m_file.seek(5, SEEK_SET);
-	return m_file.read_byte();
+	Elf64_Ehdr elf_header = get_elf_header();
+
+	m_file.seek(elf_header.e_shoff, SEEK_SET);
+
+	for (size_t i = 0; i < elf_header.e_shnum; i++)
+	{
+		Elf64_Shdr section_header = m_file.read<Elf64_Shdr>();
+		if (section_header.sh_type == SHT_SYMTAB)
+		{
+			return section_header;
+		}
+	}
+
+	return Elf64_Shdr();
 }
 
-byte elf_reader::get_ei_version()
+Elf64_Shdr elf_reader::get_dynsymbol_table()
 {
-	m_file.seek(6, SEEK_SET);
-	return m_file.read_byte();
+	Elf64_Ehdr elf_header = get_elf_header();
+
+	m_file.seek(elf_header.e_shoff, SEEK_SET);
+
+	for (size_t i = 0; i < elf_header.e_shnum; i++)
+	{
+		Elf64_Shdr section_header = m_file.read<Elf64_Shdr>();
+		if (section_header.sh_type == SHT_DYNSYM)
+		{
+			return section_header;
+		}
+	}
+
+	return Elf64_Shdr();
 }
 
-byte elf_reader::get_ei_osabi()
+Elf64_Shdr elf_reader::get_string_table()
 {
-	m_file.seek(7, SEEK_SET);
-	return m_file.read_byte();
+	Elf64_Ehdr elf_header = get_elf_header();
+
+	m_file.seek(elf_header.e_shoff, SEEK_SET);
+
+	for (size_t i = 0; i < elf_header.e_shnum; i++)
+	{
+		Elf64_Shdr section_header = m_file.read<Elf64_Shdr>();
+		if (section_header.sh_type == SHT_STRTAB)
+		{
+			return section_header;
+		}
+	}
+
+	return Elf64_Shdr();
 }
 
-byte elf_reader::get_ei_abiversion()
+Elf64_Shdr elf_reader::get_dynstring_table()
 {
-	m_file.seek(8, SEEK_SET);
-	return m_file.read_byte();
+	Elf64_Ehdr elf_header = get_elf_header();
+
+	m_file.seek(elf_header.e_shoff, SEEK_SET);
+
+	for (size_t i = 0; i < elf_header.e_shnum; i++)
+	{
+		Elf64_Shdr section_header = m_file.read<Elf64_Shdr>();
+		if (section_header.sh_type == SHT_DYNSYM)
+		{
+			return section_header;
+		}
+	}
+
+	return Elf64_Shdr();
 }
 
-elf_reader::half elf_reader::get_elf_type()
+std::vector<std::string> elf_reader::get_symbol_names()
 {
-	m_file.seek(15, SEEK_SET);
-	return m_file.read_uint16();
+	Elf64_Shdr symbol_table = get_symbol_table();
+
+	if (0 != symbol_table.sh_size)
+	{
+		Elf64_Shdr string_table = get_string_table();
+
+
+		std::vector<std::string> ret;
+
+		for (size_t i = 0; i < symbol_table.sh_size / symbol_table.sh_entsize; i++)
+		{
+			m_file.seek(symbol_table.sh_offset + i * sizeof(Elf64_Sym), SEEK_SET);
+			Elf64_Word sym_index = m_file.read<Elf64_Sym>().st_name;
+
+			m_file.seek(string_table.sh_offset + sym_index, SEEK_SET);
+			std::string symbol = m_file.read_string();
+
+			ret.push_back(symbol);
+		}
+
+		return ret;
+	}
+
+	return std::vector<std::string>();
 }
 
-elf_reader::half elf_reader::get_elf_machine()
+std::vector<std::string> elf_reader::get_dynsymbol_names()
 {
-	m_file.seek(31, SEEK_SET);
-	return m_file.read_uint16();
-}
+	Elf64_Shdr symbol_table = get_dynsymbol_table();
 
-elf_reader::word elf_reader::get_elf_version()
-{
-	m_file.seek(20, SEEK_SET);
-	return m_file.read_int32();
-}
+	if (0 != symbol_table.sh_size)
+	{
 
-elf_reader::addr elf_reader::get_elf_entry()
-{
-	m_file.seek(79, SEEK_SET);
-	return m_file.read_uint32();
-}
+		Elf64_Shdr string_table = get_string_table();
 
-elf_reader::off elf_reader::get_elf_shoff()
-{
-	m_file.seek(40, SEEK_SET);
-	return m_file.read_uint32();
-}
+		std::vector<std::string> ret;
 
+		for (size_t i = 0; i < symbol_table.sh_size / symbol_table.sh_entsize; i++)
+		{
+			m_file.seek(symbol_table.sh_offset + i * sizeof(Elf64_Sym), SEEK_SET);
+			Elf64_Word sym_index = m_file.read<Elf64_Sym>().st_name;
+
+			m_file.seek(string_table.sh_offset + sym_index, SEEK_SET);
+			std::string symbol = m_file.read_string();
+
+			ret.push_back(symbol);
+		}
+
+		return ret;
+	}
+
+	return std::vector<std::string>();
+}
 
 bool elf_reader::verify_magic_numbers()
 {
-	std::array<byte, 4> arr = m_file.read<4>();
+	std::array<byte, 16> magic = get_magic();
 
-	if (0x7f != arr[0])
-	{
-		return false;
-	}
+	std::array<byte, 4> check_bytes;
+	std::copy(magic.begin(), magic.begin() + 4, check_bytes.begin());
 
-	if ('E' != arr[1])
-	{
-		return false;
-	}
+	std::array<byte, 4> correct_magic_bytes = { ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3 };
 
-	if ('L' != arr[2])
-	{
-		return false;
-	}
-
-	if ('F' != arr[3])
-	{
-		return false;
-	}
-
-	return true;
-}
-
-void elf_reader::print_magic(std::array<byte, 16> arr)
-{
-	for (size_t i = 0; i < 15; i++)
-	{
-		printf("%02x ", arr[i]);
-	}
-
-	printf("%02x\n", arr[15]);
+	return equal_byte_array(correct_magic_bytes, check_bytes);
 }
 
 const char* elf_reader::ei_class_text(byte ei_class)
@@ -195,50 +263,50 @@ const char* elf_reader::ei_abitversion_text(byte ei_abiversion)
 	}
 }
 
-const char* elf_reader::elf_type_text(elf_reader::half elf_type)
-{
-
-	elf_type = get_proper_endian(elf_type);
-
-	switch (elf_type)
-	{
-	case 0:
-		return "NONE";
-	case 1:
-		return "Relocatable File";
-	case 2:
-		return "Executable File";
-	case 3:
-		return "Shared Object File";
-	case 4:
-		return "Core File";
-	case 0xff00:
-		return "LoProc";
-	case 0x00ff:
-		return "HiProc";
-	default:
-		return "INVALID";
-	}
-}
-
-const char* elf_reader::elf_machine_text(elf_reader::half elf_machine)
-{
-	elf_machine = get_proper_endian(elf_machine);
-
-	if (elf_machine == 0x40)
-	{
-		return "Advanced Micro Devices X86-64";
-	}
-
-	return "INVALID";
-}
-
-const char* elf_reader::elf_version_text(elf_reader::word elf_version)
-{
-	if (elf_version == 1)
-	{
-		return "0x1";
-	}
-
-	return "INVALID";
-}
+//const char* elf_reader::elf_type_text(elf_reader::half elf_type)
+//{
+//
+//	//elf_type = get_proper_endian(elf_type);
+//
+//	switch (elf_type)
+//	{
+//	case 0:
+//		return "NONE";
+//	case 1:
+//		return "Relocatable File";
+//	case 2:
+//		return "Executable File";
+//	case 3:
+//		return "Shared Object File";
+//	case 4:
+//		return "Core File";
+//	case 0xff00:
+//		return "LoProc";
+//	case 0x00ff:
+//		return "HiProc";
+//	default:
+//		return "INVALID";
+//	}
+//}
+//
+//const char* elf_reader::elf_machine_text(elf_reader::half elf_machine)
+//{
+//	//elf_machine = get_proper_endian(elf_machine);
+//
+//	if (elf_machine == 0x40)
+//	{
+//		return "Advanced Micro Devices X86-64";
+//	}
+//
+//	return "INVALID";
+//}
+//
+//const char* elf_reader::elf_version_text(elf_reader::word elf_version)
+//{
+//	if (elf_version == 1)
+//	{
+//		return "0x1";
+//	}
+//
+//	return "INVALID";
+//}

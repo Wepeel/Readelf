@@ -15,35 +15,6 @@ void file::reset()
 	rewind(m_ptr);
 }
 
-byte file::read_byte()
-{
-	return fgetc(m_ptr);
-}
-
-uint16_t file::read_uint16()
-{
-	uint16_t ret;
-	fread(&ret, sizeof(ret), 1, m_ptr);
-
-	return ret;
-}
-
-uint32_t file::read_uint32()
-{
-	uint32_t ret;
-	fread(&ret, sizeof(ret), 1, m_ptr);
-
-	return ret;
-}
-
-int32_t file::read_int32()
-{
-	int32_t ret;
-	fread(&ret, sizeof(ret), 1, m_ptr);
-
-	return ret;
-}
-
 std::vector<byte> file::read(size_t bytes_to_read)
 {
 	std::vector<byte> ret;
@@ -60,6 +31,21 @@ std::vector<byte> file::read(size_t bytes_to_read)
 
 		ret.push_back(b);
 	}
+
+	return ret;
+}
+
+std::string file::read_string()
+{
+	std::string ret;
+
+	byte byte_read;
+
+	do
+	{
+		fread(&byte_read, sizeof(byte), 1, m_ptr);
+		ret.push_back(byte_read);
+	} while (byte_read);
 
 	return ret;
 }

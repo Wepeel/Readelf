@@ -1,7 +1,23 @@
 #include "elf_reader.h"
 
-#define HEX_STRING " %-30s %u\n"
-#define PRINT_STRING " %-30s %s\n"
+template<size_t size>
+void print_byte_array(std::array<byte, size> arr)
+{
+	for (size_t i = 0; i < size; i++)
+	{
+		printf("%02x ", arr[i]);
+	}
+
+	printf("%02x\n", arr[size - 1]);
+}
+
+void print_string_vector(const std::vector<std::string>& vec)
+{
+	for (size_t i = 0; i < vec.size(); i++)
+	{
+		printf("%zu: %s\n", i, vec[i].c_str());
+	}
+}
 
 int main()
 {
@@ -15,21 +31,10 @@ int main()
 	printf("Elf Header:\n");
 
 	printf(" %-20s", "Magic:");
-	elf_reader::print_magic(file.get_magic());
+	print_byte_array(file.get_magic());
 
-	printf(PRINT_STRING, "Class:", elf_reader::ei_class_text(file.get_ei_class()));
-	printf(PRINT_STRING, "Data:", elf_reader::ei_data_text(file.get_ei_data()));
-	printf(PRINT_STRING, "Version:", elf_reader::ei_version_text(file.get_ei_version()));
-	printf(PRINT_STRING, "OS/ABI:", elf_reader::ei_osabi_text(file.get_ei_osabi()));
-	printf(PRINT_STRING, "ABI Version:", elf_reader::ei_abitversion_text(file.get_ei_abiversion()));
-
-	printf(PRINT_STRING, "Type:", file.elf_type_text(file.get_elf_type()));
-	printf(PRINT_STRING, "Machine:", file.elf_machine_text(file.get_elf_machine()));
-	printf(PRINT_STRING, "Version:", file.elf_version_text(file.get_elf_version()));
-
-	elf_reader::off shoff = file.get_elf_shoff();
-
-#pragma endregion
+	print_string_vector(file.get_symbol_names());
+	print_string_vector(file.get_dynsymbol_names());
 
 	return 0;
 }
